@@ -2,19 +2,22 @@
 #include<stdlib.h>
 #include<string.h>
 
-void sortMLB(char teams[][20], double winPerc[], int numTeams);
-void printMLB(char teams[][20], double winPerc[], int numTeams);
+void sortMLB(char **teams, double *winPerc, int numTeams);
+void printMLB(char **teams, double *winPerc, int numTeams);
 
-int main(int argc, char **argv[]) 
+int main(int argc, char **argv) 
 {
-  int const size = 200;
+  int const maxSize = 50;
   int const numTeams = 16;
   char fileName[] = "mlb_nl_2011.txt";
-  char tempBuffer[size];
-  char tmp[size];
+  char tempBuffer[100];
 
-  char teams[numTeams][20];
-  double winPercentages[numTeams];
+  int i;
+  char **teams = (char **) malloc(sizeof(char*) * numTeams);
+  double *winPercentages = (double *) malloc(sizeof(double) * numTeams);
+  for(i=0; i<numTeams; i++) {
+    teams[i] = (char *) malloc(sizeof(char) * maxSize);
+  }
 
   //TODO: open the file, read it line by line, tokenize it to get the 
   //      team name, wins, and losses, and store the results into
@@ -33,7 +36,7 @@ int main(int argc, char **argv[])
  * using the selection sort algorithm which successively finds the
  * "maximum" element and places it at the front of the array
  */
-void sortMLB(char teams[][20], double winPerc[], int numTeams) {
+void sortMLB(char **teams, double *winPerc, int numTeams) {
 
   int i, j, max_index;
   char tmp_str[100];
@@ -60,7 +63,7 @@ void sortMLB(char teams[][20], double winPerc[], int numTeams) {
 
 }
 
-void printMLB(char teams[][20], double winPerc[], int numTeams) {
+void printMLB(char **teams, double *winPerc, int numTeams) {
 
   int i=0;
   printf("%-12s %-10s\n", "TEAM", "WIN PERC");

@@ -1,11 +1,12 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<ctype.h>
 
-void toXMLFile(char states[][35], int *populations, int numStates);
+void toXMLFile(char **states, int *populations, int numStates);
 char * rtrim(char *str);
 
-int main(int argc, char **argv[]) 
+int main(int argc, char **argv) 
 {
   int const size = 200;
   int const numStates = 50;
@@ -13,8 +14,13 @@ int main(int argc, char **argv[])
   char tempBuffer[size];
   char tmp[size];
 
-  char states[numStates][35];
-  int  states_pops[numStates];
+  //setup arrays
+  int i;
+  char **states = (char **) malloc(sizeof(char*) * numStates);
+  int *statePopulations = (int *) malloc(sizeof(int) * numStates);
+  for(i=0; i<numStates; i++) {
+    states[i] = (char *) malloc(sizeof(char) * size);
+  }
 
   //open the file, quit if it fails...
   FILE *instream = fopen(fileName, "r");
@@ -24,7 +30,7 @@ int main(int argc, char **argv[])
   }
 
   //read the file, line by line
-  int i=0;
+  i=0;
   while(fgets(tempBuffer, size, instream) != NULL) {
     //remove the endline character from the line
     tempBuffer[strlen(tempBuffer)-1] = '\0';
@@ -32,7 +38,7 @@ int main(int argc, char **argv[])
     char *stateToken = strtok(tempBuffer, ",");
     strcpy(states[i], stateToken);
     char *popToken = strtok(NULL, ",");
-    states_pops[i] = atoi(popToken);
+    statePopulations[i] = atoi(popToken);
     i++;
   }
   fclose(instream);
@@ -40,27 +46,27 @@ int main(int argc, char **argv[])
   //output to the standard output
   int total = 0;
   for(i=0; i<numStates; i++) {
-    printf("%15s %10d\n", states[i], states_pops[i]);
-    total += states_pops[i];
+    printf("%15s %10d\n", states[i], statePopulations[i]);
+    total += statePopulations[i];
   }
   printf("%-15s  %10d\n", "TOTAL", total);
 
   //output to a binary datafile
-  FILE *outstream = fopen("stateData.dat", "wb");
+  FILE *outstream = fopen("stateData.dat", "w");
   for(i=0; i<numStates; i++) {
     //limit the state name to 15 characters
     fwrite(states[i], sizeof(char), 15, outstream);
-	//output a single int type
-    fwrite(&states_pops, sizeof(int), 1, outstream);
+    //output a single int type
+    fwrite(&statePopulations, sizeof(int), 1, outstream);
   }
   fclose(outstream);
 
-  toXMLFile(states, states_pops, 50);
+  toXMLFile(states, statePopulations, 50);
 
   return 0;
 }
 
-void toXMLFile(char states[][35], int *populations, int numStates) {
+void toXMLFile(char **states, int *populations, int numStates) {
   //TODO: you need to implement this
 }
 
