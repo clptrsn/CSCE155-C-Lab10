@@ -1,0 +1,310 @@
+\documentclass[12pt]{scrartcl}
+
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{.25cm}
+
+\usepackage{graphicx}
+
+\usepackage{xcolor}
+
+\definecolor{darkred}{rgb}{0.5,0,0}
+\definecolor{darkgreen}{rgb}{0,0.5,0}
+\usepackage{hyperref}
+\hypersetup{
+  letterpaper,
+  colorlinks,
+  linkcolor=red,
+  citecolor=darkgreen,
+  menucolor=darkred,
+  urlcolor=blue,
+  pdfpagemode=none,
+  pdftitle={Introduction To Git},
+  pdfauthor={Christopher M. Bourke},
+  pdfcreator={$ $Id: cv-us.tex,v 1.28 2009/01/01 00:00:00 cbourke Exp $ $},
+  pdfsubject={PhD Thesis},
+  pdfkeywords={}
+}
+
+\definecolor{MyDarkBlue}{rgb}{0,0.08,0.45}
+\definecolor{MyDarkRed}{rgb}{0.45,0.08,0}
+\definecolor{MyDarkGreen}{rgb}{0.08,0.45,0.08}
+
+\definecolor{mintedBackground}{rgb}{0.95,0.95,0.95}
+\definecolor{mintedInlineBackground}{rgb}{.90,.90,1}
+
+%\usepackage{newfloat}
+\usepackage[newfloat=true]{minted}
+\setminted{mathescape,
+               linenos,
+               autogobble,
+               frame=none,
+               framesep=2mm,
+               framerule=0.4pt,
+               %label=foo,
+               xleftmargin=2em,
+               xrightmargin=0em,
+               startinline=true,  %PHP only, allow it to omit the PHP Tags *** with this option, variables using dollar sign in comments are treated as latex math
+               numbersep=10pt, %gap between line numbers and start of line
+               style=default, %syntax highlighting style, default is "default"
+               			    %gallery: http://help.farbox.com/pygments.html
+			    	    %list available: pygmentize -L styles
+               bgcolor=mintedBackground} %prevents breaking across pages
+               
+\setmintedinline{bgcolor={mintedBackground}}
+\setminted[text]{bgcolor={mintedBackground},linenos=false,autogobble,xleftmargin=1em}
+%\setminted[php]{bgcolor=mintedBackgroundPHP} %startinline=True}
+\SetupFloatingEnvironment{listing}{name=Code Sample}
+\SetupFloatingEnvironment{listing}{listname=List of Code Samples}
+
+
+\title{CSCE 155 - C}
+\subtitle{Lab 10 - File I/O}
+\author{Dr.\ Chris Bourke}
+\date{~}
+
+\begin{document}
+
+\maketitle
+
+\section*{Prior to Lab}
+
+Before attending this lab:
+\begin{enumerate}
+  \item Read and familiarize yourself with this handout.
+  \item Review the following free textbook resources:
+	\begin{itemize}
+  	  \item \url{http://en.wikibooks.org/wiki/C_Programming/File_IO}
+	  \item \url{http://www.cs.cf.ac.uk/Dave/C/node18.html}
+	\end{itemize}
+\end{enumerate}
+
+\section*{Peer Programming Pair-Up}
+
+To encourage collaboration and a team environment, labs will be
+structured in a \emph{pair programming} setup.  At the start of
+each lab, you will be randomly paired up with another student 
+(conflicts such as absences will be dealt with by the lab instructor).
+One of you will be designated the \emph{driver} and the other
+the \emph{navigator}.  
+
+The navigator will be responsible for reading the instructions and
+telling the driver what to do next.  The driver will be in charge of the
+keyboard and workstation.  Both driver and navigator are responsible
+for suggesting fixes and solutions together.  Neither the navigator
+nor the driver is ``in charge.''  Beyond your immediate pairing, you
+are encouraged to help and interact and with other pairs in the lab.
+
+Each week you should alternate: if you were a driver last week, 
+be a navigator next, etc.  Resolve any issues (you were both drivers
+last week) within your pair.  Ask the lab instructor to resolve issues
+only when you cannot come to a consensus.  
+
+Because of the peer programming setup of labs, it is absolutely 
+essential that you complete any pre-lab activities and familiarize
+yourself with the handouts prior to coming to lab.  Failure to do
+so will negatively impact your ability to collaborate and work with 
+others which may mean that you will not be able to complete the
+lab.  
+
+\section{Lab Objectives \& Topics}
+At the end of this lab you should be familiar with the following
+\begin{itemize}
+  \item Understand the differences between binary and plaintext data
+  \item How to read from a file and process information
+  \item How to write to a file to persist information
+  \item Have some exposure to other topics such as XML and sorting
+\end{itemize}
+
+\section{Background}
+
+The life span of most program is short--measured in seconds or 
+microseconds.  For data to be useful, it needs to last beyond the 
+typical program.  This is known as data persistence.  One mechanism 
+for persisting data is to store it in a file.  Files can generally consist 
+of raw binary data or plaintext.  In either case, the data needs to be 
+structured in some manner for a program to be able to read and write 
+it.
+
+In C, file I/O (input/output) is facilitated through several standard 
+functions provided by the standard input/output (\mintinline{c}{<stdio.h>})
+library, including those found in Table \ref{table:functions}.
+
+\begin{table}
+\centering
+\begin{tabular}{l|l}
+Function & Purpose \\
+\hline\hline
+\mintinline{c}{fopen()} & Opens a file for reading (r) or writing (w) \\
+\mintinline{c}{fclose()} & Closes the file stream passed to the function \\
+\mintinline{c}{fprintf}, \mintinline{c}{fscanf} & Output/input from a file stream in a structured manner \\
+\mintinline{c}{fgets()}, \mintinline{c}{fputs()} & Inputs/outputs an entire string (line) from/to a file \\
+\mintinline{c}{fwrite()}, \mintinline{c}{fread()} & Inputs/outputs binary data \\
+\end{tabular}
+\caption{Several File I/O Functions}
+\label{table:functions}
+\end{table}
+
+You will use these functions to complete the activities in this lab.  For 
+more details, refer to a standard C reference on how to use these functions.
+
+\subsection*{String Tokenizing}
+
+Often times it is necessary to process formatted data.  One common 
+solution is to tokenize a string along some delimiter.  For example, 
+given a string of comma-separated-values (CSV) such as 
+\mintinline{text}{Sandberg,Ryne,1060 West Addison Street,Chicago,IL,60613}
+we may want to process each field, so we would want to split the string using 
+the comma as a delimiter into its constituent components (last name, first name, 
+address, city, state, zip for example).
+
+The standard string library provides a function for doing this: 
+
+\mintinline{c}{char *strtok(char *str, const char *delim);}
+
+The way to use it is as follows: the first argument is the string to be tokenized, 
+the second is the delimiter (or list of delimiters to tokenize on).  The return 
+value is the next token with the delimiter removed.  The first time you call 
+\mintinline{c}{strtok}, the first argument should be the string to be tokenized.  
+Subsequent calls should use pass \mintinline{c}{NULL} to tokenize on the same 
+string (otherwise tokenization begins anew on the string).  The same delimiter 
+should be passed each time.  The tokenization ends when \mintinline{c}{strtok} 
+returns \mintinline{c}{NULL}.  Note: the observant coder will notice that the first 
+argument is \emph{not} a \mintinline{c}{const char *}.  As such you can expect 
+\mintinline{c}{strtok} to \emph{change} the provided string as it tokenizes, so 
+be careful.
+
+\section{Activities}
+
+Clone the code for this lab from GitHub using the following URL: 
+\url{https://github.com/cbourke/CSCE155-C-Lab10}.
+
+\subsection{Plaintext versus Binary Data}
+
+In general, data files can contain either binary data (a collection of 0s and 1s) 
+or plaintext data (ASCII).  Binary data is generally readable only by a computer 
+or program that interprets the 0s and 1s as different types of data (7-bit ASCII 
+characters, 32-bit integers, etc.) while ASCII text is readable by humans, but 
+may need additional formatting and data conversions to be handled by a 
+program.  In this first activity you will get some experience in the contrast 
+between these two types of data.
+
+\subsubsection*{Instructions}
+
+In this exercise, you will work with a pre-written program that opens a file 
+containing census data on states from the 2010 census.  
+\begin{enumerate}
+  \item Open the \mintinline{text}{stateData.txt} data file which is in the
+  \mintinline{text}{data} folder and observe its contents 
+	(do not edit this file)
+  \item Examine what the \mintinline{text}{stateData.c} program is doing; 
+	compile and run it
+  \item The program will create a binary output file, \mintinline{text}{stateData.dat} 
+	in the same \mintinline{text}{data} directory.
+	\begin{enumerate}
+	  \item The unix command \mintinline{text}{file} is a utility that determines the 
+		type of a file; examples:
+		
+		\begin{minted}{text}
+		file stateData.txt
+		file stateData.dat
+		\end{minted}
+	  \item Open the \mintinline{text}{stateData.dat} file in your preferred 
+	    text editor and observe its contents
+	  \item The unix command \mintinline{text}{ls -la} will list some detailed 
+		statistics of all the files in a directory.  Run it and observe the sizes of the 
+		files (5th column in bytes).
+	\end{enumerate}
+  \item Answer the questions on your worksheet and move on to the next activity.
+\end{enumerate}
+
+\subsection{File Output}
+
+Extensible Markup Language (XML) is a markup language that defines a set 
+of rules for formatting data in a file that is both human readable and can be 
+processed by a machine.  Each piece of data is semantically marked-up to 
+indicate what that data represents.  This enables data to be more portable 
+and interoperable across different programs and different programming 
+languages.  Many tools and frameworks have been developed around its 
+usage.  For example, the state population data may be encoded in XML 
+as follows.
+
+\begin{minted}{xml}
+<STATES>
+  <STATE>
+    <NAME>Nebraska</NAME>
+    <POPULATION>1826341</POPULATION>
+  </STATE>
+  ...
+  <STATE>
+    <NAME>Ohio</NAME>
+    <POPULATION>11536504</POPULATION>
+  </STATE>
+</STATES>
+\end{minted}
+
+\subsubsection*{Instructions}
+
+Modify the \mintinline{text}{stateData.c} program by implementing 
+(and calling) the function:
+
+\mintinline{c}{void toXMLFile(char states[][35], int *populations, int numStates);}
+
+\begin{enumerate}
+  \item The function should open a file for writing, \mintinline{text}{stateData.xml}
+  \item It should create an XML file containing marked up data on all 50 states 
+	as in the example above.  
+  \item Hint: a convenience function, \mintinline{text}{rtrim} has been provided 
+	to you that trims the trailing whitespace from a string and returns a pointer 
+	to the new, trimmed string.
+  \item Answer the questions on your worksheet and demonstrate your program 
+	to a lab instructor.
+\end{enumerate}
+	
+\subsection{File Input \& Data Processing}
+
+Reading data from a file is often done in order to process and aggregate it to 
+get additional results.  In this activity you will read in data from a file containing 
+win/loss data from the 2011 Major League Baseball season.  Specifically, the 
+file \mintinline{text}{data/mlb_nl_2011.txt} contains data about each National League 
+team.  Each line contains a team name followed by the number of wins and 
+number of losses during the 2011 season.  You will open this file and process 
+the information to output a list of teams followed by their win percentage 
+(number of wins divided by the total number of games) from highest to lowest.
+
+\subsubsection*{Instructions}
+
+\begin{enumerate}
+  \item Open the \mintinline{text}{mlb.c} C source files.  Much of the program 
+  	has already been provided for you, including a convenience function to 
+	sort the lists of teams and their win percentages as well as a function 
+	to output them.
+  \item Add code to open the data file and read in the team names, wins and 
+	losses and populate the \mintinline{text}{teams[]} and \mintinline{text}{winPercentages[]} 
+	arrays with the appropriate data
+  \item Call the sort and output functions to sort and display your results
+  \item Answer the questions on your worksheet and demonstrate your working 
+  	program to a lab instructor
+\end{enumerate}
+
+\section{Advanced Activity (Optional)}
+
+\begin{enumerate}
+  \item When we sorted the baseball teams and their win percentages, we had 
+  	to do all the ``bookkeeping'' ourselves: that is, we had to swap elements 
+	in both arrays to make sure that the $i$-th team name matched up with the 
+	$i$-th win percentage.  A much better way would have been to define a 
+	user defined struct type to hold the team name and win percentage in 
+	the same structure.  Redesign the program to use such a struct.
+  \item In general, there are no restrictions on the length of a line in a plaintext 
+	file (and in a data file, there is not even a concept of a ``line'').  For the best 
+	readability, however, it is best to keep lines to a limited, consistent length.  
+	One common maximum length for monotype font is 72 characters per 
+	line (CPL).  A plaintext file, \mintinline{text}{star_wars.txt} has been provided (the 
+	original draft script of the movie Star Wars) that contains some very long 
+	lines.  Write a program to read in the file, line by line.  If the line exceeds 
+	the 72 CPL limit, break it up into multiple lines (but do not break up individual 
+	words).  Output the resulting well-formatted file to a separate file.
+\end{enumerate}
+
+\end{document}
