@@ -60,13 +60,15 @@ void sortMLB(char **teams, double *winPerc, int numTeams) {
     }
     // swap the ith element and the maximum element
     // in this case, elements from both arrays need to be swapped
-    // at the same time
-    tmp_dbl = winPerc[i];
-    winPerc[i] = winPerc[max_index];
-    winPerc[max_index] = tmp_dbl;
-    strcpy(tmp_str, teams[i]);
-    strcpy(teams[i], teams[max_index]);
-    strcpy(teams[max_index], tmp_str);
+    // at the same time; forgo swapping if it is in-place
+    if(i != max_index) {
+      tmp_dbl = winPerc[i];
+      winPerc[i] = winPerc[max_index];
+      winPerc[max_index] = tmp_dbl;
+      strcpy(tmp_str, teams[i]);
+      strcpy(teams[i], teams[max_index]);
+      strcpy(teams[max_index], tmp_str);
+    }
   }
 }
 
