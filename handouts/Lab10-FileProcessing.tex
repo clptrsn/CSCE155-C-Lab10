@@ -248,7 +248,7 @@ as follows.
 Modify the \mintinline{text}{stateData.c} program by implementing 
 (and calling) the function:
 
-\mintinline{c}{void toXMLFile(char states[][35], int *populations, int numStates);}
+\mintinline{c}{void toXMLFile(char **states, int *populations, int numStates);}
 
 \begin{enumerate}
   \item The function should open a file for writing, \mintinline{text}{stateData.xml}
